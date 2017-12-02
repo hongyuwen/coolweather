@@ -1,6 +1,7 @@
 package com.example.coolweather;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -56,6 +57,8 @@ public class ChooseAreaFragment extends Fragment {
 
     private int currentLevel;
 
+    private static final String TAG = "ChooseAreaFragment";
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -84,6 +87,25 @@ public class ChooseAreaFragment extends Fragment {
                     selectedCity = cityList.get(position);
                     queryCounties();
                 }
+                else if (currentLevel == LEVEL_COUNTY)
+                {
+                    String weatherId = countyList.get(position).getWeatherId();
+                    if (getActivity() instanceof MainActivity)
+                    {
+                        Intent intent = new Intent(getActivity(),WeatherActivity.class);
+                        intent.putExtra("weather_id",weatherId);
+                        startActivity(intent);
+                        getActivity().finish();
+                    }
+                    else if (getActivity() instanceof WeatherActivity)
+                    {
+                        WeatherActivity activity = (WeatherActivity)getActivity();
+                        activity.drawerLayout.closeDrawers();;
+                        activity.swipeRefresh.setRefreshing(true);
+                        activity.requestWeather(weatherId);
+                    }
+
+                }
             }
         });
 
@@ -100,6 +122,7 @@ public class ChooseAreaFragment extends Fragment {
                 }
             }
         });
+        queryProvinces();
     }
 
     private void queryProvinces()
@@ -127,7 +150,7 @@ public class ChooseAreaFragment extends Fragment {
     private void queryCities()
     {
         titleText.setText(selectedProvince.getProvinceName());
-        backButton.setVisibility(View.GONE);
+        backButton.setVisibility(View.VISIBLE);
         cityList = DataSupport.where("provinceid = ?",String.valueOf(selectedProvince.getId())).find(City.class);
 
         if (cityList.size() > 0)
@@ -151,7 +174,7 @@ public class ChooseAreaFragment extends Fragment {
     private void queryCounties()
     {
         titleText.setText(selectedCity.getCityName());
-        backButton.setVisibility(View.GONE);
+        backButton.setVisibility(View.VISIBLE);
         countyList = DataSupport.where("cityid = ?",String.valueOf(selectedCity.getId())).find(County.class);
 
         if (countyList.size() > 0)
